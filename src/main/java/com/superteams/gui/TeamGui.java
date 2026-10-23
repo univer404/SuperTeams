@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,6 +24,7 @@ public final class TeamGui implements Listener {
     private static final String MAIN=ChatColor.DARK_AQUA+"SuperTeams";
     private static final String MEMBERS=ChatColor.DARK_AQUA+"Team Members";
     private static final String RIGHTS=ChatColor.DARK_AQUA+"Member Rights";
+    private static final String ENDERCHEST=ChatColor.DARK_PURPLE+"Team Ender Chest";
     private static final int[] MEMBER_SLOTS={10,11,12,13,14,15,16,19,20,21,22,23,24,25};
     public TeamGui(SuperTeams plugin,TeamStore store){this.plugin=plugin;this.store=store;}
     public void open(Player player){
@@ -35,7 +38,24 @@ public final class TeamGui implements Listener {
         inv.setItem(16,item(Material.IRON_SWORD,"&cFriendly Fire",List.of("&7Current: "+(team.friendlyFire()?"&aEnabled":"&cDisabled"),"&f/team pvp")));
         inv.setItem(20,item(Material.GOLD_INGOT,"&6Team Bank",List.of("&7Balance: &f"+String.format(Locale.US,"%.2f",team.bankBalance()),"&7Use /team bank balance|deposit|withdraw")));
         inv.setItem(22,item(Material.BARRIER,"&cClose",List.of("&7Close this menu")));
+        inv.setItem(24,item(Material.ENDER_CHEST,"&5Team Ender Chest",List.of("&7Shared storage for your team","&7Permission: ENDERCHEST_USE","&f/team enderchest")));
         player.openInventory(inv);
+    }
+    public void openEnderChest(Player player,TeamData team){
+        TeamData current=store.byMember(player.getUniqueId());
+        if(current==null||!current.id().equals(team.id())){message(player,"You are not a member of that team.");return;}
+        MemberData member=team.member(player.getUniqueId());
+        if(!team.owner().equals(player.getUniqueId())&&(member==null||!member.has(TeamRight.ENDERCHEST_USE))){message(player,"You need ENDERCHEST_USE to access team storage.");return;}
+        TeamChestHolder holder=new TeamChestHolder(team.id());
+        Inventory inventory=Bukkit.createInventory(holder,27,color("&5"+team.name()+" Ender Chest"));
+        holder.inventory(inventory);inventory.setContents(team.enderChestContents());player.openInventory(inventory);
+    }
+    private static final class TeamChestHolder implements InventoryHolder {
+        private final UUID teamId;private Inventory inventory;
+        private TeamChestHolder(UUID teamId){this.teamId=teamId;}
+        public UUID teamId(){return teamId;}
+        private void inventory(Inventory inventory){this.inventory=inventory;}
+        @Override public Inventory getInventory(){return inventory;}
     }
     private String name(TeamData t,UUID id){MemberData m=t.member(id);return m==null?"Unknown":m.lastKnownName();}
     private boolean canManage(Player p,TeamData t){MemberData m=t.member(p.getUniqueId());return t.owner().equals(p.getUniqueId())||(m!=null&&m.has(TeamRight.MANAGE_MEMBERS));}
@@ -71,14 +91,20 @@ public final class TeamGui implements Listener {
         inv.setItem(49,item(Material.ARROW,"&fBack to members",List.of("&7Return to member list")));
         p.openInventory(inv);
     }
+    @EventHandler public void closeChest(InventoryCloseEvent event){
+        if(!(event.getInventory().getHolder() instanceof TeamChestHolder holder))return;
+        TeamData team=store.byId(holder.teamId());if(team==null)return;
+        team.enderChestContents(event.getInventory().getContents());store.save();
+    }
     @EventHandler public void click(InventoryClickEvent event){
+        if(event.getView().getTopInventory().getHolder() instanceof TeamChestHolder)return;
         String title=event.getView().getTitle();
         if(!MAIN.equals(title)&&!MEMBERS.equals(title)&&!RIGHTS.equals(title))return;
         event.setCancelled(true);
         if(!(event.getWhoClicked() instanceof Player p)||event.getClickedInventory()==null||event.getClickedInventory()!=event.getView().getTopInventory())return;
         int slot=event.getRawSlot();
         if(MAIN.equals(title)){
-            switch(slot){case 10->openMembers(p);case 12->p.performCommand("team home");case 14->p.performCommand("team sethome");case 16->p.performCommand("team pvp");case 20->p.performCommand("team bank balance");case 22->p.closeInventory();default->{}}
+            switch(slot){case 10->openMembers(p);case 12->p.performCommand("team home");case 14->p.performCommand("team sethome");case 16->p.performCommand("team pvp");case 20->p.performCommand("team bank balance");case 22->p.closeInventory();case 24->p.performCommand("team enderchest");default->{}}
             return;
         }
         TeamData t=store.byMember(p.getUniqueId());if(t==null){p.closeInventory();return;}
