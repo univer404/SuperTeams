@@ -31,6 +31,7 @@ public final class TeamStore {
         if(!team.addMember(new MemberData(player,playerName,System.currentTimeMillis(),Set.of())))return false;
         membership.put(player,team.id());save();return true;
     }
+    public synchronized boolean disband(TeamData team){if(team==null||teams.remove(team.id())==null)return false;for(UUID member:team.members().keySet())membership.remove(member);names.remove(key(team.name()));save();return true;}
     public synchronized boolean leave(UUID player){
         TeamData team=byMember(player);if(team==null||team.owner().equals(player))return false;
         team.removeMember(player);membership.remove(player);save();return true;
