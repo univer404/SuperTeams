@@ -14,10 +14,7 @@ public final class TeamStore {
     private final Map<UUID,UUID> membership=new HashMap<>();
     private final Map<String,UUID> names=new HashMap<>();
     private final File file;
-    private final StorageDatabase database;
-    public TeamStore(SuperTeams plugin){this.plugin=plugin;this.file=new File(plugin.getDataFolder(),"teams.yml");this.database=new StorageDatabase(plugin);}
-    public void openStorage(){try{database.open();if(database.isConnected())plugin.getLogger().info("Storage connected: "+plugin.getConfig().getString("storage.type"));}catch(Exception ex){throw new IllegalStateException("Could not initialize configured storage backend: "+ex.getMessage(),ex);}}
-    public void closeStorage(){database.close();}
+    public TeamStore(SuperTeams plugin){this.plugin=plugin;this.file=new File(plugin.getDataFolder(),"teams.yml");}
     public synchronized Collection<TeamData> teams(){return List.copyOf(teams.values());}
     public synchronized TeamData byId(UUID id){return teams.get(id);}
     public synchronized TeamData byName(String name){UUID id=names.get(key(name));return id==null?null:teams.get(id);}
