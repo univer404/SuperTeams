@@ -47,6 +47,7 @@ public final class TeamStore {
             y.set(p+".friendly-fire",t.friendlyFire());y.set(p+".bank-balance",t.bankBalance());
             y.set(p+".home.set",t.homeSet());
             if(t.homeSet()){y.set(p+".home.world",t.homeWorld());y.set(p+".home.x",t.homeX());y.set(p+".home.y",t.homeY());y.set(p+".home.z",t.homeZ());y.set(p+".home.yaw",t.homeYaw());y.set(p+".home.pitch",t.homePitch());}
+            for(int slot=0;slot<27;slot++){org.bukkit.inventory.ItemStack chestItem=t.enderChestContents()[slot];if(chestItem!=null)y.set(p+".enderchest."+slot,chestItem);}
             for(MemberData m:t.members().values()){String mp=p+".members."+m.uuid();y.set(mp+".name",m.lastKnownName());y.set(mp+".joined-at",m.joinedAt());y.set(mp+".rights",m.rights().stream().map(Enum::name).toList());}
         }
         File tmp=new File(plugin.getDataFolder(),"teams.yml.tmp");
@@ -60,6 +61,7 @@ public final class TeamStore {
             UUID id=UUID.fromString(idText);String p="teams."+idText;String name=y.getString(p+".name");UUID owner=UUID.fromString(y.getString(p+".owner"));
             TeamData t=new TeamData(id,name,owner,y.getLong(p+".created-at"));t.members().clear();t.friendlyFire(y.getBoolean(p+".friendly-fire"));t.bankBalance(Math.max(0,y.getDouble(p+".bank-balance")));
             if(y.getBoolean(p+".home.set"))t.home(y.getString(p+".home.world"),y.getDouble(p+".home.x"),y.getDouble(p+".home.y"),y.getDouble(p+".home.z"),(float)y.getDouble(p+".home.yaw"),(float)y.getDouble(p+".home.pitch"));
+            for(int slot=0;slot<27;slot++){org.bukkit.inventory.ItemStack chestItem=y.getItemStack(p+".enderchest."+slot);if(chestItem!=null){org.bukkit.inventory.ItemStack[] contents=t.enderChestContents();contents[slot]=chestItem;t.enderChestContents(contents);}}
             ConfigurationSection ms=y.getConfigurationSection(p+".members");if(ms!=null)for(String mid:ms.getKeys(false)){UUID mu=UUID.fromString(mid);Set<TeamRight> rights=EnumSet.noneOf(TeamRight.class);for(String r:y.getStringList(p+".members."+mid+".rights"))try{rights.add(TeamRight.valueOf(r));}catch(IllegalArgumentException ignored){}t.members().put(mu,new MemberData(mu,y.getString(p+".members."+mid+".name","unknown"),y.getLong(p+".members."+mid+".joined-at"),rights));membership.put(mu,id);}
             if(!t.members().containsKey(owner)){t.members().put(owner,new MemberData(owner,"unknown",t.createdAt(),EnumSet.allOf(TeamRight.class)));plugin.getLogger().warning("Repaired missing owner membership for team "+name);}
             t.members().get(owner).rights().addAll(EnumSet.allOf(TeamRight.class));teams.put(id,t);names.put(key(name),id);
