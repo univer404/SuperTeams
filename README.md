@@ -41,15 +41,15 @@ Available individual rights are defined by `TeamRight`: `INVITE`, `KICK`, `MANAG
 ## Configuration and data
 - `plugins/SuperTeams/config.yml` controls team name rules, member limits, invitation expiry, home warm-up/cooldown, and chat spy.
 - `plugins/SuperTeams/teams.yml` stores team, member, rights, home, friendly-fire, and bank balance data.
-- `plugins/SuperTeams/invitations.yml` stores expiring invitations.
+- `plugins/SuperTeams/invitations.yml` stores expiring invitations.\n- `plugins/SuperTeams/bank-transactions.yml` keeps a durable transaction audit journal. Incomplete entries are flagged for manual reconciliation at startup.
 - Back up the whole plugin data directory before upgrades or migrations.
 
 ## Important limitations before production
-- The bank uses Vault through an optional runtime bridge, but a durable financial transaction journal/recovery workflow is **not yet implemented**. Avoid using the bank for valuable balances until that is added and tested against your economy provider.
+- The bank uses Vault through an optional runtime bridge and journals each operation. Vault providers do not offer a universal idempotent transaction API, so a crash between an economy-provider action and journal update can require **manual reconciliation**. The journal intentionally does not replay unfinished transactions automatically. Test against your exact economy provider and do not treat this as a guaranteed atomic financial ledger.
 - Storage is YAML only; SQLite/MySQL backends and schema migrations are not implemented.
-- The GUI currently exposes core shortcuts; a complete clickable member/rights editor and bank interface remain outstanding.
-- Home warm-up checks movement and cooldowns, but damage-based cancellation and a full teleport edge-case test suite remain outstanding.
-- PlaceholderAPI integration, comprehensive automated tests, and live Paper/Purpur integration tests remain outstanding.
+- The GUI includes a clickable member list and individual rights editor, plus shortcuts for home, friendly fire, and bank balance. Deposits and withdrawals remain command-based.
+- Home warm-up supports movement and damage cancellation, cooldowns, and manual cancellation. A full teleport edge-case test suite and live server testing remain outstanding.
+- PlaceholderAPI expansion, SQLite/MySQL backends, complete settings GUI, comprehensive automated tests, and live Paper/Purpur integration tests remain outstanding.
 - Folia compatibility is not claimed.
 
 Please test on a staging server, verify Vault/economy compatibility, and keep backups. Do not treat this build as production-ready until the remaining financial, persistence, and integration tests are completed.
