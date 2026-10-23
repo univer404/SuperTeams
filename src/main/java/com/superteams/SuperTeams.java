@@ -19,7 +19,6 @@ public final class SuperTeams extends JavaPlugin {
         command.setExecutor(handler);
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(store), this);
-        getServer().getPluginManager().registerEvents(new com.superteams.gui.TeamGui(store), this);
         getLogger().info("SuperTeams enabled. Storage: YAML. Development build; not yet production-ready.");
     }
 
