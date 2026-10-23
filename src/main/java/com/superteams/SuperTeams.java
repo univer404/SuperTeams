@@ -23,7 +23,7 @@ public final class SuperTeams extends JavaPlugin {
         command.setExecutor(handler);
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(this, store, handler), this);
-        getLogger().info("SuperTeams enabled. Storage: "+getConfig().getString("storage.type","YAML").toUpperCase(java.util.Locale.ROOT)+".");
+        getLogger().info("SuperTeams enabled. Using lightweight YAML storage.");
     }
 
     @Override public void onDisable() { if (store != null) { store.save(); } }
