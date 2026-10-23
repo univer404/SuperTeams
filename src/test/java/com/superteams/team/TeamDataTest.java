@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TeamDataTest {
@@ -35,6 +37,17 @@ class TeamDataTest {
         assertEquals(member,team.owner());
         assertTrue(team.member(member).rights().containsAll(EnumSet.allOf(TeamRight.class)));
         assertTrue(team.member(owner).rights().isEmpty());
+    }
+
+    @Test void teamEnderChestContentsAreDefensiveCopies() {
+        TeamData team=new TeamData(UUID.randomUUID(),"Guild",UUID.randomUUID(),1L);
+        ItemStack[] contents=new ItemStack[27];contents[0]=new ItemStack(Material.DIAMOND,3);
+        team.enderChestContents(contents);
+        contents[0].setAmount(1);
+        assertEquals(3,team.enderChestContents()[0].getAmount());
+        ItemStack[] read=team.enderChestContents();read[0].setAmount(2);
+        assertEquals(3,team.enderChestContents()[0].getAmount());
+        assertEquals(27,team.enderChestContents().length);
     }
 
     @Test void bankBalanceRejectsNegativeAndNonFiniteValues() {
