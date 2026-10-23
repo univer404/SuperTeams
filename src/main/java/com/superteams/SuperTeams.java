@@ -14,7 +14,8 @@ public final class SuperTeams extends JavaPlugin {
         saveDefaultConfig();
         saveResource("messages.yml", false);
         this.store = new TeamStore(this);
-        store.openStorage();\n        store.load();
+        store.openStorage();
+        store.load();
         PluginCommand command = getCommand("team");
         if (command == null) throw new IllegalStateException("team command missing from plugin.yml");
         this.gui = new TeamGui(this, store);
