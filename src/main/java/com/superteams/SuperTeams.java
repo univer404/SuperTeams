@@ -22,8 +22,8 @@ public final class SuperTeams extends JavaPlugin {
         TeamCommand handler = new TeamCommand(this, store);
         command.setExecutor(handler);
         command.setTabCompleter(handler);
-        getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(store), this);
-        getLogger().info("SuperTeams enabled. Storage: YAML. Development build; not yet production-ready.");
+        getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(this, store, handler), this);
+        getLogger().info("SuperTeams enabled. Storage: YAML.");
     }
 
     @Override public void onDisable() { if (store != null) store.save(); }
