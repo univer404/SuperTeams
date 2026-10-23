@@ -24,6 +24,8 @@ public final class TeamCommand implements TabExecutor {
     @Override public boolean onCommand(CommandSender sender,Command cmd,String label,String[] a){
         if(a.length==0){if(!(sender instanceof Player p)){msg(sender,"Players only.");return true;}TeamData t=store.byMember(p.getUniqueId());if(t==null){msg(p,"Create a team with /team create <name>.");return true;}plugin.gui().open(p);return true;}
         String sub=a[0].toLowerCase(Locale.ROOT);
+        if(!sender.hasPermission("superteams.use")&&!sub.equals("create")){msg(sender,"No permission.");return true;}
+        if(sub.equals("reload")){if(!sender.hasPermission("superteams.admin")){msg(sender,"Only administrators can reload SuperTeams.");return true;}plugin.reloadConfig();msg(sender,"Configuration reloaded. Restart may be required for storage changes.");return true;}
         if(sub.equals("create")){if(!(sender instanceof Player p)){msg(sender,"Players only.");return true;}if(!sender.hasPermission("superteams.create")){msg(sender,"No permission.");return true;}if(a.length<2){msg(sender,"Usage: /team create <name>");return true;}String name=a[1];int min=plugin.getConfig().getInt("teams.name-min-length",3),max=plugin.getConfig().getInt("teams.name-max-length",16);if(name.length()<min||name.length()>max||!Pattern.matches(plugin.getConfig().getString("teams.allowed-name-regex","^[A-Za-z0-9_]+$"),name)){msg(p,"Invalid team name.");return true;}if(store.byMember(p.getUniqueId())!=null){msg(p,"You already belong to a team.");return true;}if(!store.create(name,p.getUniqueId(),p.getName())){msg(p,"That team name is already taken.");return true;}msg(p,"Created team "+name+".");return true;}
         if(!(sender instanceof Player p)){msg(sender,"Players only.");return true;}TeamData t=store.byMember(p.getUniqueId());
         switch(sub){
@@ -45,5 +47,14 @@ public final class TeamCommand implements TabExecutor {
             default->msg(p,"Commands: create, info, invite, accept, decline, kick, leave, transfer, disband, rights, bank, sethome, home, chat, pvp.");
         }return true;
     }
-    @Override public List<String> onTabComplete(CommandSender s,Command c,String a,String[] args){if(args.length==1)return List.of("create","invite","accept","decline","kick","leave","transfer","disband","info","chat","pvp","home","sethome","cancel","rights","bank","reload").stream().filter(x->x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();if(args.length==2&&args[0].equalsIgnoreCase("kick")){TeamData t=s instanceof Player p?store.byMember(p.getUniqueId()):null;return t==null?List.of():t.members().values().stream().map(MemberData::lastKnownName).filter(n->n.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))).toList();}return List.of();}
+    @Override public List<String> onTabComplete(CommandSender s,Command c,String alias,String[] args){
+        if(args.length==1)return List.of("create","invite","accept","decline","kick","leave","transfer","disband","info","chat","pvp","home","sethome","cancel","rights","bank","reload").stream().filter(x->x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        TeamData t=s instanceof Player p?store.byMember(p.getUniqueId()):null;
+        if(t==null)return List.of();
+        if(args.length==2&&List.of("kick","transfer","rights").contains(args[0].toLowerCase(Locale.ROOT)))return t.members().values().stream().map(MemberData::lastKnownName).filter(n->n.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+        if(args.length==3&&args[0].equalsIgnoreCase("rights"))return Arrays.stream(TeamRight.values()).map(Enum::name).filter(n->n.toLowerCase(Locale.ROOT).startsWith(args[2].toLowerCase(Locale.ROOT))).toList();
+        if(args.length==4&&args[0].equalsIgnoreCase("rights"))return List.of("on","off").stream().filter(x->x.startsWith(args[3].toLowerCase(Locale.ROOT))).toList();
+        if(args.length==2&&args[0].equalsIgnoreCase("bank"))return List.of("balance","deposit","withdraw").stream().filter(x->x.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+        return List.of();
+    }
 }
