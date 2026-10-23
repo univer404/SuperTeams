@@ -1,5 +1,17 @@
 storage:
+  # Choose YAML, SQLITE, or MYSQL. Database tables are created automatically.
   type: YAML
+  sqlite:
+    # Relative path inside plugins/SuperTeams/
+    file: teams.db
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: superteams
+    username: superteams
+    password: CHANGE_ME
+    # JDBC URL parameters without the leading question mark.
+    parameters: "useSSL=false&serverTimezone=UTC"
 teams:
   name-min-length: 3
   name-max-length: 16
