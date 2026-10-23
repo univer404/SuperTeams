@@ -32,7 +32,3 @@ Team and guild management for Paper/Purpur with independent rights per member.
 
 ## Safety notes
 Bank operations are not exposed until transaction handling can be implemented safely. Folia compatibility is not claimed. Test on a staging server and back up data before use.
-
-
-## GUI increment
-A starter team overview, member list, and individual-rights toggle GUI has been added. Open GUI routing from `/team` and complete live testing remain outstanding; this commit is not a production release.
