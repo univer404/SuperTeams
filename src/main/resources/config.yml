@@ -1,0 +1,18 @@
+storage:
+  type: YAML
+teams:
+  name-min-length: 3
+  name-max-length: 16
+  allowed-name-regex: '^[A-Za-z0-9_]+$'
+  max-members: 10
+  invite-expiry-seconds: 86400
+home:
+  warmup-seconds: 3
+  cooldown-seconds: 60
+  cancel-on-move: true
+  cancel-on-damage: true
+chat:
+  format: '<aqua>[Team]</aqua> <gray>{player}</gray><dark_gray>:</dark_gray> {message}'
+  spy-enabled: true
+friendly-fire:
+  enabled-by-default: false

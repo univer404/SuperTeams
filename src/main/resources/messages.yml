@@ -1,0 +1,8 @@
+prefix: '<aqua>[SuperTeams]</aqua> '
+no-team: '<red>You are not in a team.</red>'
+no-permission: '<red>You do not have the required team right.</red>'
+player-only: '<red>This command can only be used by a player.</red>'
+created: '<green>Team {team} created.</green>'
+joined: '<green>You joined {team}.</green>'
+invited: '<green>Invitation sent to {player}.</green>'
+invite-received: '<yellow>{player} invited you to {team}. Use /team accept {team}</yellow>'

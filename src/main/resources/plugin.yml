@@ -1,0 +1,17 @@
+name: SuperTeams
+version: 0.1.0-SNAPSHOT
+main: com.superteams.SuperTeams
+api-version: '1.21.11'
+authors: [Veyl]
+description: Team management with independent per-member rights.
+softdepend: [Vault, PlaceholderAPI]
+commands:
+  team:
+    description: Manage your team
+    usage: /team
+    aliases: [teams, guild, clan]
+permissions:
+  superteams.use: {default: true}
+  superteams.create: {default: true}
+  superteams.admin: {default: op}
+  superteams.chatspy: {default: op}
