@@ -33,21 +33,22 @@ The Maven Build workflow runs on pushes and pull requests. The plugin jar is pub
 | `/team bank balance` | View shared bank balance |
 | `/team bank deposit <amount>` | Deposit economy funds |
 | `/team bank withdraw <amount>` | Withdraw from the shared bank |
+| `/team enderchest` | Open persistent shared 27-slot team storage |
 | `/team pvp` | Toggle friendly fire |
 | `/team chat <message>` | Send team chat |
 
-Available individual rights are defined by `TeamRight`: `INVITE`, `KICK`, `MANAGE_MEMBERS`, `HOME_USE`, `HOME_SET`, `HOME_BYPASS`, `BANK_VIEW`, `BANK_DEPOSIT`, `BANK_WITHDRAW`, `CHAT`, `CHAT_COLOR`, `PVP`, and `TEAM_SETTINGS`. The owner always retains full control. Only the owner can delegate `MANAGE_MEMBERS`.
+Available individual rights are defined by `TeamRight`: `INVITE`, `KICK`, `MANAGE_MEMBERS`, `HOME_USE`, `HOME_SET`, `HOME_BYPASS`, `BANK_VIEW`, `BANK_DEPOSIT`, `BANK_WITHDRAW`, `CHAT`, `CHAT_COLOR`, `PVP`, `TEAM_SETTINGS`, and `ENDERCHEST_USE`. The owner always retains full control. Only the owner can delegate `MANAGE_MEMBERS`.
 
 ## Configuration and data
 - `plugins/SuperTeams/config.yml` controls team name rules, member limits, invitation expiry, home warm-up/cooldown, and chat spy.
-- `plugins/SuperTeams/teams.yml` stores team, member, rights, home, friendly-fire, and bank balance data.
+- `plugins/SuperTeams/teams.yml` stores team, member, rights, home, friendly-fire, bank balance, and shared team ender chest contents.
 - `plugins/SuperTeams/invitations.yml` stores expiring invitations.\n- `plugins/SuperTeams/bank-transactions.yml` keeps a durable transaction audit journal. Incomplete entries are flagged for manual reconciliation at startup.
 - Back up the whole plugin data directory before upgrades or migrations.
 
 ## Important limitations before production
 - The bank uses Vault through an optional runtime bridge and journals each operation. Vault providers do not offer a universal idempotent transaction API, so a crash between an economy-provider action and journal update can require **manual reconciliation**. The journal intentionally does not replay unfinished transactions automatically. Test against your exact economy provider and do not treat this as a guaranteed atomic financial ledger.
 - Storage is YAML only; SQLite/MySQL backends and schema migrations are not implemented.
-- The GUI includes a clickable member list and individual rights editor, plus shortcuts for home, friendly fire, and bank balance. Deposits and withdrawals remain command-based.
+- The GUI includes a clickable member list and individual rights editor, plus shortcuts for home, friendly fire, bank balance, and the shared team ender chest. Deposits and withdrawals remain command-based.
 - Home warm-up supports movement and damage cancellation, cooldowns, and manual cancellation. A full teleport edge-case test suite and live server testing remain outstanding.
 - PlaceholderAPI expansion, SQLite/MySQL backends, complete settings GUI, comprehensive automated tests, and live Paper/Purpur integration tests remain outstanding.
 - Folia compatibility is not claimed.
