@@ -23,7 +23,7 @@ class TeamDataTest {
         assertFalse(data.has(TeamRight.KICK));
         data.rights().add(TeamRight.HOME_USE);
         assertTrue(data.has(TeamRight.HOME_USE));
-        assertFalse(team.member(owner).has(TeamRight.HOME_USE)==false && team.member(owner).rights().isEmpty());
+        assertTrue(team.member(owner).has(TeamRight.HOME_USE));
     }
 
     @Test void ownershipTransferRequiresExistingMemberAndRevokesOldRights() {
