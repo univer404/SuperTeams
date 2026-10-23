@@ -14,7 +14,7 @@ public final class SuperTeams extends JavaPlugin {
         saveDefaultConfig();
         saveResource("messages.yml", false);
         this.store = new TeamStore(this);
-        store.load();
+        store.openStorage();\n        store.load();
         PluginCommand command = getCommand("team");
         if (command == null) throw new IllegalStateException("team command missing from plugin.yml");
         this.gui = new TeamGui(this, store);
@@ -23,10 +23,10 @@ public final class SuperTeams extends JavaPlugin {
         command.setExecutor(handler);
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(this, store, handler), this);
-        getLogger().info("SuperTeams enabled. Storage: YAML.");
+        getLogger().info("SuperTeams enabled. Storage: "+getConfig().getString("storage.type","YAML").toUpperCase(java.util.Locale.ROOT)+".");
     }
 
-    @Override public void onDisable() { if (store != null) store.save(); }
+    @Override public void onDisable() { if (store != null) { store.save(); store.closeStorage(); } }
     public TeamStore store() { return store; }
     public TeamGui gui() { return gui; }
 }
