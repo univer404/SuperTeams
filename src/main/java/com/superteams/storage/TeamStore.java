@@ -14,7 +14,9 @@ public final class TeamStore {
     private final Map<UUID,UUID> membership=new HashMap<>();
     private final Map<String,UUID> names=new HashMap<>();
     private final File file;
-    public TeamStore(SuperTeams plugin){this.plugin=plugin;this.file=new File(plugin.getDataFolder(),"teams.yml");}
+    private final File invitationsFile;
+    private final Map<UUID, Map<UUID, Long>> invitations = new HashMap<>();
+    public TeamStore(SuperTeams plugin){this.plugin=plugin;this.file=new File(plugin.getDataFolder(),"teams.yml"); this.invitationsFile=new File(plugin.getDataFolder(),"invitations.yml");}
     public synchronized Collection<TeamData> teams(){return List.copyOf(teams.values());}
     public synchronized TeamData byId(UUID id){return teams.get(id);}
     public synchronized TeamData byName(String name){UUID id=names.get(key(name));return id==null?null:teams.get(id);}
@@ -39,6 +41,74 @@ public final class TeamStore {
         if(team==null||team.owner().equals(player)||!team.members().containsKey(player))return false;
         team.removeMember(player);membership.remove(player);save();return true;
     }
+
+    public synchronized boolean invite(UUID target, UUID teamId) {
+        TeamData team = teams.get(teamId);
+        if (team == null || membership.containsKey(target)) return false;
+        long seconds = Math.max(60L, plugin.getConfig().getLong("teams.invite-expiry-seconds", 86400));
+        invitations.computeIfAbsent(target, k -> new HashMap<>()).put(teamId, System.currentTimeMillis() + seconds * 1000L);
+        saveInvitations();
+        return true;
+    }
+    public synchronized boolean hasInvitation(UUID target, UUID teamId) {
+        Map<UUID, Long> map = invitations.get(target);
+        if (map == null) return false;
+        Long expiry = map.get(teamId);
+        if (expiry == null) return false;
+        if (expiry <= System.currentTimeMillis()) {
+            map.remove(teamId);
+            if (map.isEmpty()) invitations.remove(target);
+            saveInvitations();
+            return false;
+        }
+        return true;
+    }
+    public synchronized boolean acceptInvitation(UUID target, UUID teamId, String playerName) {
+        if (!hasInvitation(target, teamId)) return false;
+        TeamData team = teams.get(teamId);
+        if (team == null || membership.containsKey(target) || team.members().size() >= plugin.getConfig().getInt("teams.max-members", 10)) return false;
+        if (!join(team, target, playerName)) return false;
+        Map<UUID, Long> map = invitations.get(target);
+        if (map != null) { map.remove(teamId); if (map.isEmpty()) invitations.remove(target); }
+        saveInvitations();
+        return true;
+    }
+    public synchronized boolean declineInvitation(UUID target, UUID teamId) {
+        Map<UUID, Long> map = invitations.get(target);
+        if (map == null || map.remove(teamId) == null) return false;
+        if (map.isEmpty()) invitations.remove(target);
+        saveInvitations();
+        return true;
+    }
+    private synchronized void saveInvitations() {
+        YamlConfiguration y = new YamlConfiguration();
+        invitations.forEach((target, map) -> map.forEach((team, expiry) -> y.set("invitations." + target + "." + team, expiry)));
+        try {
+            plugin.getDataFolder().mkdirs();
+            File tmp = new File(plugin.getDataFolder(), "invitations.yml.tmp");
+            y.save(tmp);
+            try { java.nio.file.Files.move(tmp.toPath(), invitationsFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE); }
+            catch (IOException ex) { java.nio.file.Files.move(tmp.toPath(), invitationsFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
+        } catch (IOException ex) { plugin.getLogger().severe("Could not save invitations: " + ex.getMessage()); }
+    }
+    private synchronized void loadInvitations() {
+        if (!invitationsFile.exists()) return;
+        YamlConfiguration y = YamlConfiguration.loadConfiguration(invitationsFile);
+        ConfigurationSection root = y.getConfigurationSection("invitations");
+        if (root == null) return;
+        long now = System.currentTimeMillis();
+        for (String targetText : root.getKeys(false)) try {
+            UUID target = UUID.fromString(targetText);
+            ConfigurationSection map = root.getConfigurationSection(targetText);
+            if (map == null) continue;
+            for (String teamText : map.getKeys(false)) try {
+                UUID team = UUID.fromString(teamText);
+                long expiry = map.getLong(teamText);
+                if (expiry > now && teams.containsKey(team)) invitations.computeIfAbsent(target, k -> new HashMap<>()).put(team, expiry);
+            } catch (IllegalArgumentException ignored) { }
+        } catch (IllegalArgumentException ignored) { }
+    }
+
     public synchronized void save(){
         YamlConfiguration y=new YamlConfiguration(); y.set("schema-version",1);
         for(TeamData t:teams.values()){
@@ -63,5 +133,6 @@ public final class TeamStore {
             if(!t.members().containsKey(owner)){t.members().put(owner,new MemberData(owner,"unknown",t.createdAt(),EnumSet.allOf(TeamRight.class)));plugin.getLogger().warning("Repaired missing owner membership for team "+name);}
             t.members().get(owner).rights().addAll(EnumSet.allOf(TeamRight.class));teams.put(id,t);names.put(key(name),id);
         }catch(Exception ex){plugin.getLogger().severe("Skipped invalid team record "+idText+": "+ex.getMessage());}
+        loadInvitations();
     }
 }
