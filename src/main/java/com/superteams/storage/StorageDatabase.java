@@ -38,8 +38,9 @@ public final class StorageDatabase implements AutoCloseable {
         if (type.equals("YAML")) return;
         if (type.equals("SQLITE")) {
             String configuredPath = plugin.getConfig().getString("storage.sqlite.file", "teams.db");
-            Path path = new File(plugin.getDataFolder(), configuredPath).toPath().normalize();
-            if (!path.startsWith(plugin.getDataFolder().toPath().toAbsolutePath().normalize())) {
+            Path base = plugin.getDataFolder().toPath().toAbsolutePath().normalize();
+            Path path = base.resolve(configuredPath).normalize();
+            if (!path.startsWith(base)) {
                 throw new IOException("SQLite file must be inside the SuperTeams data folder.");
             }
             Files.createDirectories(path.getParent());
@@ -75,23 +76,13 @@ public final class StorageDatabase implements AutoCloseable {
 
     public synchronized void saveTeams(String yaml) throws SQLException {
         if (connection == null) return;
-        try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO superteams_state (state_key, state_data) VALUES (?, ?) " +
-                        "ON CONFLICT(state_key) DO UPDATE SET state_data = excluded.state_data")) {
-            if (type.equals("MYSQL")) {
-                statement.close();
-                try (PreparedStatement mysql = connection.prepareStatement(
-                        "INSERT INTO superteams_state (state_key, state_data) VALUES (?, ?) " +
-                                "ON DUPLICATE KEY UPDATE state_data = VALUES(state_data)")) {
-                    mysql.setString(1, STATE_KEY);
-                    mysql.setString(2, yaml);
-                    mysql.executeUpdate();
-                }
-            } else {
-                statement.setString(1, STATE_KEY);
-                statement.setString(2, yaml);
-                statement.executeUpdate();
-            }
+        String sql = type.equals("MYSQL")
+                ? "INSERT INTO superteams_state (state_key, state_data) VALUES (?, ?) ON DUPLICATE KEY UPDATE state_data = VALUES(state_data)"
+                : "INSERT INTO superteams_state (state_key, state_data) VALUES (?, ?) ON CONFLICT(state_key) DO UPDATE SET state_data = excluded.state_data";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, STATE_KEY);
+            statement.setString(2, yaml);
+            statement.executeUpdate();
         }
     }
 
