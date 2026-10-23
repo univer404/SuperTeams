@@ -1,34 +1,55 @@
 # SuperTeams
 
-Team and guild management for Paper/Purpur with independent rights per member.
+Minecraft team/guild management for Paper and Purpur, with **independent rights per member** rather than fixed officer/member roles.
 
-**Status: early development scaffold; not production-ready.** Some commands and features intentionally report as unavailable rather than pretending to work.
+> **Status: active development, not yet production-certified.** The GitHub Actions Maven build is used as a compile check. A successful compile is not a substitute for in-game integration testing.
 
 ## Requirements
-- JDK 21
-- Maven
-- Paper/Purpur API for 1.21.11
+- Java 21
+- Maven 3.9+
+- Paper/Purpur 1.21.11 (API target)
+- Vault plus a compatible economy provider for team-bank commands
 
 ## Build
-`mvn clean package`
+```sh
+mvn --batch-mode clean verify
+```
+The Maven Build workflow runs on pushes and pull requests. The plugin jar is published as a workflow artifact when the build succeeds.
 
-## Current implementation
-- Maven plugin metadata and configurable settings
-- UUID-backed team/member model and individual `TeamRight` values
-- YAML persistence with temporary-file replacement and basic load repair
-- Team create, info, leave, kick, chat, and friendly-fire toggle commands
-- Friendly-fire cancellation for direct player attacks and player-shot projectiles
-- Basic tab completion
+## Commands
+| Command | Purpose |
+|---|---|
+| `/team` | Open the team menu |
+| `/team create <name>` | Create a team |
+| `/team info [name]` | Show team summary |
+| `/team invite <player>` | Invite an online player |
+| `/team accept`, `/team decline` | Accept or decline a pending invitation |
+| `/team kick <member>` | Remove a non-owner member |
+| `/team leave` | Leave a team (owners must transfer or disband) |
+| `/team transfer <member>` | Transfer ownership |
+| `/team disband confirm` | Permanently disband your team |
+| `/team rights <member> <RIGHT> <on|off>` | Edit an individual member's rights |
+| `/team sethome`, `/team home`, `/team cancel` | Set/use/cancel a team-home teleport |
+| `/team bank balance` | View shared bank balance |
+| `/team bank deposit <amount>` | Deposit economy funds |
+| `/team bank withdraw <amount>` | Withdraw from the shared bank |
+| `/team pvp` | Toggle friendly fire |
+| `/team chat <message>` | Send team chat |
 
-## Not implemented yet
-- Persistent, expiring invitation acceptance flow
-- Inventory GUIs and rights editor
-- Team homes and teleport warm-ups
-- Vault shared bank and financial transaction journal/recovery
-- SQLite/MySQL backends and schema migrations
-- PlaceholderAPI expansion
-- Ownership transfer and confirmed disband flow
-- Automated test suite and verified build
+Available individual rights are defined by `TeamRight`: `INVITE`, `KICK`, `MANAGE_MEMBERS`, `HOME_USE`, `HOME_SET`, `HOME_BYPASS`, `BANK_VIEW`, `BANK_DEPOSIT`, `BANK_WITHDRAW`, `CHAT`, `CHAT_COLOR`, `PVP`, and `TEAM_SETTINGS`. The owner always retains full control. Only the owner can delegate `MANAGE_MEMBERS`.
 
-## Safety notes
-Bank operations are not exposed until transaction handling can be implemented safely. Folia compatibility is not claimed. Test on a staging server and back up data before use.
+## Configuration and data
+- `plugins/SuperTeams/config.yml` controls team name rules, member limits, invitation expiry, home warm-up/cooldown, and chat spy.
+- `plugins/SuperTeams/teams.yml` stores team, member, rights, home, friendly-fire, and bank balance data.
+- `plugins/SuperTeams/invitations.yml` stores expiring invitations.
+- Back up the whole plugin data directory before upgrades or migrations.
+
+## Important limitations before production
+- The bank uses Vault through an optional runtime bridge, but a durable financial transaction journal/recovery workflow is **not yet implemented**. Avoid using the bank for valuable balances until that is added and tested against your economy provider.
+- Storage is YAML only; SQLite/MySQL backends and schema migrations are not implemented.
+- The GUI currently exposes core shortcuts; a complete clickable member/rights editor and bank interface remain outstanding.
+- Home warm-up checks movement and cooldowns, but damage-based cancellation and a full teleport edge-case test suite remain outstanding.
+- PlaceholderAPI integration, comprehensive automated tests, and live Paper/Purpur integration tests remain outstanding.
+- Folia compatibility is not claimed.
+
+Please test on a staging server, verify Vault/economy compatibility, and keep backups. Do not treat this build as production-ready until the remaining financial, persistence, and integration tests are completed.
