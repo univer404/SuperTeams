@@ -1,5 +1,5 @@
 name: SuperTeams
-version: 0.1.0-SNAPSHOT
+version: 0.1.0
 main: com.superteams.SuperTeams
 api-version: '1.21.11'
 authors: [Veyl]
