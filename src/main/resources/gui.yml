@@ -1,0 +1,79 @@
+# SuperTeams GUI configuration. Restart or reload the plugin after editing.
+main:
+  title: '&3SuperTeams'
+  size: 27
+  items:
+    overview:
+      slot: 4
+      material: NAME_TAG
+      name: '&b%team%'
+      lore:
+        - '&7Members: &f%members%'
+        - '&7Owner: &f%owner%'
+        - '&7Friendly fire: %pvp%'
+    members:
+      slot: 10
+      material: PLAYER_HEAD
+      name: '&eMembers &7(%members%)'
+      lore: ['&7View members and individual rights', '&fClick to open']
+    home:
+      slot: 12
+      material: WHITE_BED
+      name: '&aTeam Home'
+      lore: ['&7Teleport to your team home', '&f/team home']
+    set-home:
+      slot: 14
+      material: COMPASS
+      name: '&aSet Team Home'
+      lore: ['&7Set the shared team home', '&f/team sethome']
+    friendly-fire:
+      slot: 16
+      material: IRON_SWORD
+      name: '&cFriendly Fire'
+      lore: ['&7Current: %pvp%', '&f/team pvp']
+    bank:
+      slot: 20
+      material: GOLD_INGOT
+      name: '&6Team Bank'
+      lore: ['&7Balance: &f%balance%', '&7Use /team bank balance|deposit|withdraw']
+    close:
+      slot: 22
+      material: BARRIER
+      name: '&cClose'
+      lore: ['&7Close this menu']
+    ender-chest:
+      slot: 24
+      material: ENDER_CHEST
+      name: '&5Team Ender Chest'
+      lore: ['&7Shared storage for your team', '&7Permission: ENDERCHEST_USE', '&f/team enderchest']
+members:
+  title: '&3Team Members'
+  size: 54
+  slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25]
+  item:
+    material: PLAYER_HEAD
+    name: '&e%player%'
+    lore: ['&7%role%', '&7Rights: &f%rights%', '&7Click to manage rights']
+  back:
+    slot: 49
+    material: ARROW
+    name: '&fBack'
+    lore: ['&7Return to main menu']
+rights:
+  title: '&3Member Rights'
+  size: 54
+  member-slot: 4
+  item:
+    enabled-material: LIME_DYE
+    disabled-material: GRAY_DYE
+    enabled-name: '&a%right%'
+    disabled-name: '&c%right%'
+    lore: ['&7Status: %status%', '&7Click to toggle']
+  back:
+    slot: 49
+    material: ARROW
+    name: '&fBack to members'
+    lore: ['&7Return to member list']
+ender-chest:
+  title: '&5%team% Ender Chest'
+  size: 27
