@@ -12,7 +12,8 @@ public final class SuperTeams extends JavaPlugin {
 
     @Override public void onEnable() {
         saveDefaultConfig();
-        saveResource("messages.yml", false);
+        saveResourceIfMissing("messages.yml");
+        saveResourceIfMissing("gui.yml");
         this.store = new TeamStore(this);
         store.load();
         PluginCommand command = getCommand("team");
@@ -24,6 +25,17 @@ public final class SuperTeams extends JavaPlugin {
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(new com.superteams.listener.TeamListener(this, store, handler), this);
         getLogger().info("SuperTeams enabled. Using lightweight YAML storage.");
+    }
+
+    private void saveResourceIfMissing(String path) {
+        java.io.File target = new java.io.File(getDataFolder(), path);
+        if (target.exists()) return;
+        java.io.File parent = target.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            getLogger().severe("Could not create configuration directory for " + path);
+            return;
+        }
+        saveResource(path, false);
     }
 
     @Override public void onDisable() { if (store != null) { store.save(); } }
