@@ -112,7 +112,9 @@ public final class TeamGui implements Listener {
             message(player, "You need ENDERCHEST_USE to access team storage."); return;
         }
         YamlConfiguration cfg = gui();
-        int size = size(cfg, "ender-chest", 27);
+        int size = Math.max(team.enderChestContents().length, size(cfg, "ender-chest", 27));
+        if (size < 27) size = 27;
+        if (size > 54) size = 54;
         TeamChestHolder holder = new TeamChestHolder(team.id());
         String chestTitle = cfg.getString("ender-chest.title", "&5%team% Ender Chest").replace("%team%", team.name());
         Inventory inventory = Bukkit.createInventory(holder, size, color(chestTitle));
@@ -187,7 +189,7 @@ public final class TeamGui implements Listener {
         Inventory inv = Bukkit.createInventory(null, size, title(cfg, "rights", "&3Member Rights"));
         int memberSlot = cfg.getInt("rights.member-slot", 4);
         if (memberSlot < 0 || memberSlot >= size) memberSlot = 4;
-        ItemStack head = item(cfg, "rights.member", Material.PLAYER_HEAD, "&e" + member.lastKnownName(), List.of("&7Click a right to toggle it."));
+        ItemStack head = item(cfg, "rights.member", Material.PLAYER_HEAD, "&e%player%", List.of("&7Click a right to toggle it."), Map.of("%player%", member.lastKnownName()));
         if (head.getItemMeta() instanceof SkullMeta meta) { meta.setOwningPlayer(Bukkit.getOfflinePlayer(member.uuid())); head.setItemMeta(meta); }
         inv.setItem(memberSlot, head);
         List<Integer> slots = cfg.getIntegerList("rights.slots");
