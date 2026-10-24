@@ -52,7 +52,10 @@ public final class TeamGui implements Listener {
 
     private Material material(YamlConfiguration cfg, String path, Material fallback) {
         String configured = cfg.getString(path, fallback.name());
-        Material value = configured == null ? null : Material.matchMaterial(configured.trim());
+        String materialName = configured == null ? "" : configured.trim();
+        if (materialName.regionMatches(true, 0, "minecraft:", 0, 10)) materialName = materialName.substring(10);
+        materialName = materialName.replace(' ', '_');
+        Material value = Material.matchMaterial(materialName);
         if (value == null || !value.isItem()) {
             plugin.getLogger().warning("Invalid GUI material at gui.yml " + path + ": " + configured + ". Using " + fallback.name() + ".");
             return fallback;
