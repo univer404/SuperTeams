@@ -261,7 +261,9 @@ public final class TeamGui implements Listener {
             int index = slots.indexOf(clickedSlot);
             TeamRight[] rights = TeamRight.values();
             if (index < 0 || index >= rights.length) return;
-            ItemStack targetHead = event.getView().getTopInventory().getItem(cfg.getInt("rights.member-slot", 4));
+            int configuredMemberSlot = cfg.getInt("rights.member-slot", 4);
+            if (configuredMemberSlot < 0 || configuredMemberSlot >= event.getView().getTopInventory().getSize()) configuredMemberSlot = 4;
+            ItemStack targetHead = event.getView().getTopInventory().getItem(configuredMemberSlot);
             if (targetHead == null || !targetHead.hasItemMeta()) return;
             String targetName = ChatColor.stripColor(targetHead.getItemMeta().getDisplayName());
             MemberData target = team.members().values().stream().filter(member -> member.lastKnownName().equals(targetName)).findFirst().orElse(null);
