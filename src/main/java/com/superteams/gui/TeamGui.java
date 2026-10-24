@@ -1,5 +1,7 @@
 package com.superteams.gui;
 
+import com.superteams.util.GuiText;
+
 import com.superteams.SuperTeams;
 import com.superteams.storage.TeamStore;
 import com.superteams.team.*;
@@ -49,8 +51,13 @@ public final class TeamGui implements Listener {
     }
 
     private Material material(YamlConfiguration cfg, String path, Material fallback) {
-        Material value = Material.matchMaterial(cfg.getString(path, fallback.name()));
-        return value == null || !value.isItem() ? fallback : value;
+        String configured = cfg.getString(path, fallback.name());
+        Material value = configured == null ? null : Material.matchMaterial(configured.trim());
+        if (value == null || !value.isItem()) {
+            plugin.getLogger().warning("Invalid GUI material at gui.yml " + path + ": " + configured + ". Using " + fallback.name() + ".");
+            return fallback;
+        }
+        return value;
     }
 
     private ItemStack item(YamlConfiguration cfg, String path, Material fallbackMaterial,
@@ -61,14 +68,14 @@ public final class TeamGui implements Listener {
         if (meta == null) return stack;
         String name = cfg.getString(path + ".name", fallbackName);
         for (var replacement : replacements.entrySet()) name = name.replace(replacement.getKey(), replacement.getValue());
-        meta.setDisplayName(color(name));
+        meta.displayName(GuiText.component(name));
         List<String> sourceLore = cfg.contains(path + ".lore") ? cfg.getStringList(path + ".lore") : fallbackLore;
         List<String> lore = new ArrayList<>();
         for (String line : sourceLore) {
             for (var replacement : replacements.entrySet()) line = line.replace(replacement.getKey(), replacement.getValue());
-            lore.add(color(line));
+            lore.add(line);
         }
-        meta.setLore(lore);
+        meta.lore(lore.stream().map(GuiText::component).toList());
         stack.setItemMeta(meta);
         return stack;
     }
@@ -83,7 +90,7 @@ public final class TeamGui implements Listener {
         if (team == null) { message(player, "Create a team with /team create <name>."); return; }
         YamlConfiguration cfg = gui();
         int size = size(cfg, "main", 27);
-        Inventory inv = Bukkit.createInventory(null, size, title(cfg, "main", "&3SuperTeams"));
+        Inventory inv = Bukkit.createInventory(null, size, GuiText.component(title(cfg, "main", "&3SuperTeams")));
         String pvp = team.friendlyFire() ? "&aEnabled" : "&cDisabled";
         Map<String, String> values = Map.of("%team%", team.name(), "%members%", String.valueOf(team.members().size()),
                 "%owner%", name(team, team.owner()), "%pvp%", color(pvp),
@@ -117,7 +124,7 @@ public final class TeamGui implements Listener {
         if (size > 54) size = 54;
         TeamChestHolder holder = new TeamChestHolder(team.id());
         String chestTitle = cfg.getString("ender-chest.title", "&5%team% Ender Chest").replace("%team%", team.name());
-        Inventory inventory = Bukkit.createInventory(holder, size, color(chestTitle));
+        Inventory inventory = Bukkit.createInventory(holder, size, GuiText.component(chestTitle));
         holder.inventory(inventory);
         ItemStack[] contents = team.enderChestContents();
         inventory.setContents(Arrays.copyOf(contents, size));
@@ -155,7 +162,7 @@ public final class TeamGui implements Listener {
         if (team == null) { open(player); return; }
         YamlConfiguration cfg = gui();
         int size = size(cfg, "members", 54);
-        Inventory inv = Bukkit.createInventory(null, size, title(cfg, "members", "&3Team Members"));
+        Inventory inv = Bukkit.createInventory(null, size, GuiText.component(title(cfg, "members", "&3Team Members")));
         List<Integer> slots = memberSlots(cfg);
         int index = 0;
         for (MemberData member : team.members().values()) {
@@ -186,7 +193,7 @@ public final class TeamGui implements Listener {
         if (!canManage(player, team)) { message(player, "You need MANAGE_MEMBERS to edit rights."); openMembers(player); return; }
         YamlConfiguration cfg = gui();
         int size = size(cfg, "rights", 54);
-        Inventory inv = Bukkit.createInventory(null, size, title(cfg, "rights", "&3Member Rights"));
+        Inventory inv = Bukkit.createInventory(null, size, GuiText.component(title(cfg, "rights", "&3Member Rights")));
         int memberSlot = cfg.getInt("rights.member-slot", 4);
         if (memberSlot < 0 || memberSlot >= size) memberSlot = 4;
         ItemStack head = item(cfg, "rights.member", Material.PLAYER_HEAD, "&e%player%", List.of("&7Click a right to toggle it."), Map.of("%player%", member.lastKnownName()));
@@ -265,7 +272,7 @@ public final class TeamGui implements Listener {
             if (configuredMemberSlot < 0 || configuredMemberSlot >= event.getView().getTopInventory().getSize()) configuredMemberSlot = 4;
             ItemStack targetHead = event.getView().getTopInventory().getItem(configuredMemberSlot);
             if (targetHead == null || !targetHead.hasItemMeta()) return;
-            String targetName = ChatColor.stripColor(targetHead.getItemMeta().getDisplayName());
+            String targetName = GuiText.plain(targetHead.getItemMeta().getDisplayName());
             MemberData target = team.members().values().stream().filter(member -> member.lastKnownName().equals(targetName)).findFirst().orElse(null);
             if (target == null || target.uuid().equals(team.owner())) { message(player, "Cannot edit this member."); openMembers(player); return; }
             TeamRight right = rights[index];
